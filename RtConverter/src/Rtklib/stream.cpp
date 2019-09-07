@@ -59,6 +59,7 @@
 *           2016/09/27 1.24 support udp server and client
 *           2016/10/10 1.25 support ::P={4|8} option in path for STR_FILE
 *-----------------------------------------------------------------------------*/
+#include "../../include/Rtklib/rtklib_fun.h"
 #include <ctype.h>
 #ifndef _WIN32
 #include <fcntl.h>
@@ -77,7 +78,6 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #endif
-#include "../../include/Rtklib/rtklib_fun.h"
 namespace bamboo{
 /* constants -----------------------------------------------------------------*/
 
@@ -155,6 +155,10 @@ typedef struct {            /* tcp control type */
     int tcon;               /* reconnect time (ms) (-1:never,0:now) */
     unsigned int tact;      /* data active tick */
     unsigned int tdis;      /* disconnect tick */
+
+	char* buff_tosend;      /* accumulate buffer */
+	int nbyte_tosend;       /* nbyte to send     */
+
 } tcp_t;
 
 typedef struct tcpsvr_tag { /* tcp server type */
@@ -1099,11 +1103,13 @@ static int gentcp(tcp_t *tcp, int type, char *msg)
 static void discontcp(tcp_t *tcp, int tcon)
 {
     tracet(3,"discontcp: sock=%d tcon=%d\n",tcp->sock,tcon);
-    
     closesocket(tcp->sock);
     tcp->state=0;
     tcp->tcon=tcon;
     tcp->tdis=tickget();
+
+	tcp->nbyte_tosend = 0;
+	free(tcp->buff_tosend);
 }
 /* open tcp server -----------------------------------------------------------*/
 static tcpsvr_t *opentcpsvr(const char *path, char *msg)
@@ -1197,6 +1203,8 @@ static int accsock(tcpsvr_t *tcpsvr, char *msg)
            tcpsvr->cli[i].sock,tcpsvr->cli[i].saddr,i);
     tcpsvr->cli[i].state=2;
     tcpsvr->cli[i].tact=tickget();
+	tcpsvr->cli[i].nbyte_tosend = 0;
+	tcpsvr->cli[i].buff_tosend = (char*)calloc(buffsize, sizeof(char));
     return 1;
 }
 /* wait socket accept --------------------------------------------------------*/
@@ -1242,27 +1250,51 @@ static int readtcpsvr(tcpsvr_t *tcpsvr, unsigned char *buff, int n, char *msg)
 /* write tcp server ----------------------------------------------------------*/
 static int writetcpsvr(tcpsvr_t *tcpsvr, unsigned char *buff, int n, char *msg)
 {
-    int i,ns=0,err;
-    
+	char *ptr = NULL;
+    int i,ns=0,err,nsend = 0;
     tracet(4,"writetcpsvr: state=%d n=%d\n",tcpsvr->svr.state,n);
-    
     if (!waittcpsvr(tcpsvr,msg)) return 0;
-    
     for (i=0;i<MAXCLI;i++) {
         if (tcpsvr->cli[i].state!=2) continue;
-        
-        if ((ns=send_nb(tcpsvr->cli[i].sock,buff,n))==-1) {
-            if ((err=errsock())) {
-                tracet(1,"writetcpsvr: send error i=%d sock=%d err=%d\n",i,
-                       tcpsvr->cli[i].sock,err);
-            }
-            discontcp(&tcpsvr->cli[i],ticonnect);
-            updatetcpsvr(tcpsvr,msg);
-            return 0;
-        }
-        if (ns>0) tcpsvr->cli[i].tact=tickget();
+		/* accumulate the buffer here */
+		// if the buffer is full,assign it as disconnected
+		if (tcpsvr->cli[i].nbyte_tosend + n > buffsize) {
+			discontcp(&tcpsvr->cli[i], ticonnect);
+			updatetcpsvr(tcpsvr, msg);
+			continue;
+		}
+		ptr = tcpsvr->cli[i].buff_tosend;
+		memcpy(ptr + tcpsvr->cli[i].nbyte_tosend, buff, sizeof(char)*n);
+		tcpsvr->cli[i].nbyte_tosend += n;
+		/* begin to sending data here */
+		while (tcpsvr->cli[i].nbyte_tosend > 0) {
+			n = tcpsvr->cli[i].nbyte_tosend > 1024 ? 1024 : tcpsvr->cli[i].nbyte_tosend;
+			if ((ns = send_nb(tcpsvr->cli[i].sock,(unsigned char*)ptr, n)) == -1) {
+				if ((err = errsock())) {
+					tracet(1, "writetcpsvr: send error i=%d sock=%d err=%d\n", i,
+						tcpsvr->cli[i].sock, err);
+				}
+				discontcp(&tcpsvr->cli[i], ticonnect);
+				updatetcpsvr(tcpsvr, msg);
+				break;
+			}
+			if (ns == 0) break; /// not send any data
+			if (ns > 0) {
+				nsend = nsend + ns;
+				ptr = ptr + ns;
+				tcpsvr->cli[i].nbyte_tosend = tcpsvr->cli[i].nbyte_tosend - ns;
+				tcpsvr->cli[i].tact = tickget();
+			}
+		}
+		/* update the memory to send-buffer here */
+		if (tcpsvr->cli[i].state == 2 && tcpsvr->cli[i].nbyte_tosend > 0) {
+			char *bf = (char*)calloc(tcpsvr->cli[i].nbyte_tosend, sizeof(char));
+			memcpy(bf, ptr, sizeof(char) * tcpsvr->cli[i].nbyte_tosend);
+			memcpy(tcpsvr->cli[i].buff_tosend, bf, sizeof(char) * tcpsvr->cli[i].nbyte_tosend);
+			free(bf);
+		}
     }
-    return ns;
+    return nsend;
 }
 /* get state tcp server ------------------------------------------------------*/
 static int statetcpsvr(tcpsvr_t *tcpsvr)
@@ -2650,6 +2682,10 @@ extern void strinit(stream_t *stream)
     stream->port=NULL;
     stream->path[0]='\0';
     stream->msg [0]='\0';
+#ifdef _WIN32
+	WSADATA WSAdata;
+	WSAStartup(MAKEWORD(2, 2), &WSAdata);
+#endif
 }
 /* open stream -----------------------------------------------------------------
 *

@@ -66,6 +66,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <signal.h>
 #define __USE_MISC
 #ifndef CRTSCTS
 #define CRTSCTS  020000000000
@@ -2685,6 +2686,8 @@ extern void strinit(stream_t *stream)
 #ifdef _WIN32
 	WSADATA WSAdata;
 	WSAStartup(MAKEWORD(2, 2), &WSAdata);
+#else
+	signal(SIGPIPE, SIG_IGN);
 #endif
 }
 /* open stream -----------------------------------------------------------------

@@ -3,7 +3,7 @@
 #include <map>
 #include <list>
 #include "RtConvItem.h"
-#include "../../include/Rtklib/Rtklib.h"
+#include "../../include/Rtklib/rtklib.h"
 namespace bamboo {
 	const int obsdelay = 5;  // 5s delay
 	class RtConverter {

@@ -51,7 +51,6 @@ void RtConverter::routineCheck() {
 	while (true) {
 		/* TEST FOR OUTPUT */
 		test_input();
-
 		item_sd.clear();
 		{
 			Locker(&this->_mutex);
@@ -158,5 +157,4 @@ int main(int argc, char* args[]) {
 	RtConverter rtconv;
 	rtconv.routineCheck();
 }
-
 

@@ -154,6 +154,10 @@ void Deploy::m_readConfiguresJson(bool lexit) {
 		bamboo::excludeAnnoValue(outdir, root[item]["outdir"].asCString());
 		for (i = 0; i < root[item]["sta-list"].size(); i++) {
 			bamboo::excludeAnnoValue(value, root[item]["sta-list"][i].asCString());
+			if (!m_checkStation(value)) {
+				cout << "Existing same station,will continue for " << value << endl;
+				continue;
+			}
 			post_stalist.push_back(value);
 		}
 		item = "satellites";
@@ -175,6 +179,10 @@ void Deploy::m_readConfiguresJson(bool lexit) {
 				vrsitem.staname = value;
 				bamboo::excludeAnnoValue(value, root[item]["vrs-list"][i]["sta-list"][ivrs]["xyz"].asCString());
 				sscanf(value, "%lf%lf%lf", vrsitem.x, vrsitem.x + 1, vrsitem.x + 2);
+				if (!m_checkStation(vrsitem.staname)) {
+					cout << "Existing same station,will continue for " << vrsitem.staname << endl;
+					continue;
+				}
 				list_items.push_back(vrsitem);
 			}
 			rt_mounts[svr] = list_items;
@@ -184,8 +192,7 @@ void Deploy::m_readConfiguresJson(bool lexit) {
 
 		bamboo::excludeAnnoValue(value, root[item]["rtk-port"].asCString());
 		sscanf(value, "%d", &rtkport);
-		/// check stations here
-
+		
 		result = stat(f_jsonConfigures, &st);
 		lastAct = st.st_mtime;
 	}
@@ -193,4 +200,18 @@ void Deploy::m_readConfiguresJson(bool lexit) {
 		printf("file = %s,failed to parse database item", f_jsonConfigures);
 		if (lexit) exit(1); else return;
 	}
+}
+bool Deploy::m_checkStation(string sta) {
+	list<string>::iterator strItr;
+	list<VrsStaItem>::iterator itemItr;
+	map<string, list<VrsStaItem>>::iterator mapItr;
+	for (strItr = post_stalist.begin(); strItr != post_stalist.end(); strItr++) {
+		if ((*strItr) == sta) return false;
+	}
+	for (mapItr = rt_mounts.begin(); mapItr != rt_mounts.end(); mapItr++) {
+		for (itemItr = (*mapItr).second.begin(); itemItr != (*mapItr).second.end(); ++itemItr) {
+			if ((*itemItr).staname == sta) return false;
+		}
+	}
+	return true;
 }

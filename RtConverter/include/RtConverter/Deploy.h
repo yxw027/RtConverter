@@ -34,6 +34,7 @@ namespace bamboo {
 	protected:
 		Deploy(int,char*[]);
 	
+		bool m_checkStation(string);
 		void m_readConfiguresJson(bool);
 		char f_jsonConfigures[1024];
 		static Deploy* sInstance;

@@ -128,9 +128,45 @@ RtConvItem RtRinexStream::m_makeupItems(int mjd,double sod,vector<RnxobsFile_sat
 void RtRinexStream::m_adaptConfigures() {
 	Deploy config_new = Deploy::s_getConfigures();
 	/// diff the new configures and saved configures and update the memory
-
-
-
+	list<string> add_, del_;
+	vector<RnxobsFile_sat*>::iterator rnxItr;
+	list<string>::iterator strItr, strItr_mem;
+	for (strItr = config_new.post_stalist.begin(); strItr != config_new.post_stalist.end(); strItr++) {
+		bool lfind = false;
+		for (strItr_mem = configs_sav.post_stalist.begin(); strItr_mem != configs_sav.post_stalist.end(); ++strItr_mem) {
+			if ((*strItr) == (*strItr_mem)) {
+				lfind = true;
+				break;
+			}
+		}
+		if (!lfind) add_.push_back(*strItr);
+	}
+	for (strItr_mem = configs_sav.post_stalist.begin(); strItr_mem != configs_sav.post_stalist.end(); ++strItr_mem) {
+		bool lfind = false;
+		for (strItr = config_new.post_stalist.begin(); strItr != config_new.post_stalist.end(); strItr++) {
+			if ((*strItr) == (*strItr_mem)) {
+				lfind = true;
+				break;
+			}
+		}
+		if (!lfind) del_.push_back(*strItr_mem);
+	}
+	/// adapt the current process
+	for (strItr = add_.begin(); strItr != add_.end(); strItr++) {
+		RnxobsFile_sat* rnx = new RnxobsFile_sat(*strItr);
+		this->m_rnxs.push_back(rnx);
+	}
+	for (strItr = add_.begin(); strItr != add_.end(); strItr++) {
+		for (rnxItr = m_rnxs.begin(); rnxItr != m_rnxs.end(); rnxItr++) {
+			if ((*rnxItr)->staname == (*strItr)) {
+				(*rnxItr)->v_closeRnx();
+				delete (*rnxItr);
+				m_rnxs.erase(rnxItr);
+				break;
+			}
+		}
+	}
+	configs_sav = config_new;
 }
 void* RtRinexStream::s_pthRinexStream(void* args) {
 	RtRinexStream* str = (RtRinexStream*)args;

@@ -98,7 +98,11 @@ void RnxobsFile_sat::v_readEpoch(int& mjd, double& sod) {
 		if (nprn > MAXSAT) {
 			printf("nprn = %d,MAXSAT = %d,staname = %s,station's satellite number is bigger than MAXSAT,possible is the readEpoch iflag!",
 					nprn,MAXSAT,staname.c_str());
-			exit(1);
+			in.close();
+			memset(obs, 0, sizeof(double) * MAXSAT * 2 * MAXFREQ);
+			this->mjd = mjd;
+			this->sod = sod;
+			return;
 		}
 		// station moved
 		if (iflag > 1) {
@@ -122,7 +126,11 @@ void RnxobsFile_sat::v_readEpoch(int& mjd, double& sod) {
 		yr2year(iy);
 		if(iy < 2000 || iy > 3500){
 			printf("iy = %d,staname = %s,reading time error,possible is the readEpoch iflag!",iy,staname.c_str());
-			exit(1);
+			in.close();
+			memset(obs, 0, sizeof(double) * MAXSAT * 2 * MAXFREQ);
+			this->mjd = mjd;
+			this->sod = sod;
+			return;
 		}
 		this->mjd = md_julday(iy, im, id);
 		this->sod = ih * 3600.0 + imi * 60 + sec;//NINT(ih * 3600.0 + imi * 60 + sec);

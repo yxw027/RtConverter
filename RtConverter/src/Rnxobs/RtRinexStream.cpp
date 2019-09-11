@@ -156,7 +156,7 @@ void RtRinexStream::m_adaptConfigures() {
 		RnxobsFile_sat* rnx = new RnxobsFile_sat(*strItr);
 		this->m_rnxs.push_back(rnx);
 	}
-	for (strItr = add_.begin(); strItr != add_.end(); strItr++) {
+	for (strItr = del_.begin(); strItr != del_.end(); strItr++) {
 		for (rnxItr = m_rnxs.begin(); rnxItr != m_rnxs.end(); rnxItr++) {
 			if ((*rnxItr)->staname == (*strItr)) {
 				(*rnxItr)->v_closeRnx();

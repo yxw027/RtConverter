@@ -155,6 +155,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Json\json_reader.cpp" />
+    <ClCompile Include="src\Json\json_value.cpp" />
+    <ClCompile Include="src\Json\json_writer.cpp" />
+    <ClCompile Include="src\Rnxobs\Com.cpp" />
+    <ClCompile Include="src\Rnxobs\Log.cpp" />
+    <ClCompile Include="src\Rnxobs\Patterns.cpp" />
+    <ClCompile Include="src\Rnxobs\Rnxobs.cpp" />
+    <ClCompile Include="src\Rnxobs\RnxobsFile_sat.cpp" />
+    <ClCompile Include="src\Rnxobs\RtRinexStream.cpp" />
+    <ClCompile Include="src\RtConverter\Deploy.cpp" />
     <ClCompile Include="src\RtConverter\RtConverter.cpp" />
     <ClCompile Include="src\Rtklib\binex.cpp" />
     <ClCompile Include="src\Rtklib\lambda.cpp" />
@@ -166,11 +176,32 @@
     <ClCompile Include="src\Rtklib\stream.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Json\allocator.h" />
+    <ClInclude Include="include\Json\assertions.h" />
+    <ClInclude Include="include\Json\autolink.h" />
+    <ClInclude Include="include\Json\config.h" />
+    <ClInclude Include="include\Json\features.h" />
+    <ClInclude Include="include\Json\forwards.h" />
+    <ClInclude Include="include\Json\json.h" />
+    <ClInclude Include="include\Json\reader.h" />
+    <ClInclude Include="include\Json\value.h" />
+    <ClInclude Include="include\Json\version.h" />
+    <ClInclude Include="include\Json\writer.h" />
+    <ClInclude Include="include\Rnxobs\Com.h" />
+    <ClInclude Include="include\Rnxobs\Log.h" />
+    <ClInclude Include="include\Rnxobs\Patterns.h" />
+    <ClInclude Include="include\Rnxobs\Rnxobs.h" />
+    <ClInclude Include="include\Rnxobs\RtRinexStream.h" />
     <ClInclude Include="include\RtConverter\Const.h" />
+    <ClInclude Include="include\RtConverter\Deploy.h" />
     <ClInclude Include="include\RtConverter\RtConverter.h" />
     <ClInclude Include="include\RtConverter\RtConvItem.h" />
     <ClInclude Include="include\Rtklib\rtklib.h" />
     <ClInclude Include="include\Rtklib\rtklib_fun.h" />
+    <ClInclude Include="src\Json\json_tool.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\Json\json_valueiterator.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

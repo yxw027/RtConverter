@@ -9,6 +9,7 @@ namespace bamboo {
 	public:
 		RtSatObs() { memset(obs, 0, sizeof(obs)); }
 		double obs[MAXFREQ * 2];
+		double snr[MAXFREQ];
 		std::string fob[MAXFREQ * 2];
 	};
 	class RtConvItem {

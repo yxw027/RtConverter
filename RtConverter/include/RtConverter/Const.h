@@ -100,12 +100,82 @@ namespace bamboo {
 	const double QZS_L2 = GPS_L2;
 	const double QZS_L5 = GPS_L5;
 	const double QZS_LEX = 1278750000.0;
-	class Locker {
-	public:
-		Locker(lock_t* in) { mlock = in; if(mlock) lock(mlock); }
-		~Locker() { if(mlock) unlock(mlock); }
-	private:
-		lock_t* mlock;
-	};
+
+	const int LEN_OBSTYPE = 4;
+	const int LEN_FREQ = 4;
+	const int LEN_ANTENNA = 21;
+	const int LEN_PRN = 4;
+	const int LEN_PORT = 256;
+	const int LEN_STRING = 1024;
+	const int LEN_SATTYPE = 20;
+	const int LEN_PCVTYPE = 5;
+	const int LEN_CLKTYPE = 5;
+	const int LEN_COSPARID = 7;
+	const int LEN_SITENAME = 5;
+	const int LEN_ZTDMAP = 3;
+	const int LEN_EPHION = 4;
+#ifdef _WIN32
+	#define def_thread_t    HANDLE
+	#define def_dev_t       HANDLE 
+	#define def_cond_t      CONDITION_VARIABLE 
+	#define def_lock_t      CRITICAL_SECTION
+	#define def_initlock(f) InitializeCriticalSection(f)
+	#define def_lock(f)     EnterCriticalSection(f)
+	#define def_unlock(f)   LeaveCriticalSection(f)
+	#define def_destroylock(f)  DeleteCriticalSection(f)
+
+	#define def_initcond(c)  InitializeConditionVariable(c)
+	#define def_notify(c)    WakeConditionVariable(c)
+	#define def_wait(c,f)    SleepConditionVariableCS(c,f,INFINITE)
+	#define def_destroycond(c) 
+
+	#define FILEPATHSEP '\\'
+	#define def_pthread_id_self()  GetCurrentThreadId()
+#else
+
+	#define def_thread_t    pthread_t
+	#define def_dev_t       int 
+	#define def_cond_t      pthread_cond_t
+	#define def_lock_t      pthread_mutex_t
+	#define def_initlock(f) pthread_mutex_init(f,NULL)
+	#define def_lock(f)     pthread_mutex_lock(f)
+	#define def_unlock(f)   pthread_mutex_unlock(f)
+	#define def_destroylock(f)  pthread_mutex_destroy(f)
+
+	#define def_initcond(c) pthread_cond_init(c,NULL)
+	#define def_notify(c) pthread_cond_signal(c)
+	#define def_wait(c,f) pthread_cond_wait(c,f)
+	#define def_destroycond(c) pthread_cond_destroy(c)
+
+	#define FILEPATHSEP '/'
+
+	#define def_pthread_id_self()  pthread_self()
+#endif
+	template<typename T> string toString(const T& t) {
+		ostringstream oss;  //
+		oss << t;             //
+		return oss.str();
+	}
+	template<class T>
+	inline T MAX(T a, T b) {
+		return a > b ? a : b;
+	}
+	template<class T>
+	inline T MIN(T a, T b) {
+		return a > b ? b : a;
+	}
+
+	template<class T, class P>
+	inline T SIGN(T a, P b) {
+		return b > 0 ? a : -a;
+	}
+	template<class T>
+	inline int NINT(T a) {
+		return (int)(a + SIGN(1, a) * 0.5);
+	}
+	template<class T>
+	inline T ABS(T a) {
+		return a > 0 ? a : -a;
+	}
 }
 #endif /* INCLUDE_BAMBOO_CONST_H_ */

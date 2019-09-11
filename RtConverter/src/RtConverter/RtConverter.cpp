@@ -1,17 +1,26 @@
 #include "../../include/RtConverter/RtConverter.h"
 #include "../../include/RtConverter/Const.h"
 #include "../../include/Rtklib/rtklib_fun.h"
+#include "../../include/Rnxobs/RtRinexStream.h"
 using namespace bamboo;
 RtConverter::RtConverter() {
 	initlock(&_mutex);
+	obsdelay = 5;
+	port = -1;
+}
+RtConverter::RtConverter(int delay,unsigned int port_in) {
+	initlock(&_mutex);
+	obsdelay = delay;
+	port = port_in;
 }
 RtConverter::~RtConverter() {
 }
 /// which will be called in the other threads
 int RtConverter::inputObs(RtConvItem& item) {
-	Locker(&this->_mutex);
+	def_lock(&_mutex);
 	if (obsqueue.empty()) {
 		obsqueue.push_back(item);
+		def_unlock(&_mutex);
 		return 1;
 	}
 	RtConvItem& front = this->obsqueue.front();
@@ -19,6 +28,7 @@ int RtConverter::inputObs(RtConvItem& item) {
 	if (item.curt.time < front.curt.time) return 0;
 	if (item.curt.time > end.curt.time) {
 		this->obsqueue.push_back(item);
+		def_unlock(&_mutex);
 		return 1;
 	}
 	list<RtConvItem>::iterator itrlist, itrfind = obsqueue.end();
@@ -27,11 +37,12 @@ int RtConverter::inputObs(RtConvItem& item) {
 		itrlist++;
 	}
 	if ((*itrlist).curt.time != item.curt.time) {
-		obsqueue.insert(itrlist,item);
+		obsqueue.insert(itrlist, item);
+		def_unlock(&_mutex);
 		return 1;
 	}
 	/// queue already exist the same time,will add into the memory
-	std::map<std::string, std::map<std::string, RtSatObs> >::iterator itr,obitr_in = item.obslist.begin();
+	std::map<std::string, std::map<std::string, RtSatObs> >::iterator itr, obitr_in = item.obslist.begin();
 	std::map<std::string, std::map<std::string, RtSatObs> >::iterator obitr_mem = (*itrlist).obslist.begin();
 	while (obitr_in != item.obslist.end()) {
 		itr = (*itrlist).obslist.find((*obitr_in).first);
@@ -39,39 +50,66 @@ int RtConverter::inputObs(RtConvItem& item) {
 		(*itrlist).obslist[(*obitr_in).first] = (*obitr_in).second;
 		++obitr_in;
 	}
+	def_unlock(&_mutex);
 	return 1;
+}
+void RtConverter::beginProcess() {
+	def_thread_t pid_handle;
+#ifdef _WIN32
+	CreateThread(NULL, 0, s_pthProcess_win, this, 0, NULL);
+#else
+	if (0 != pthread_create(&pid_handle, NULL, &s_pthProcess, this)) {
+		cout
+			<< "***ERROR(s_VRSMain):cant create thread to handle request!"
+			<< endl;
+		exit(1);
+	}
+#endif
+}
+#ifdef _WIN32
+DWORD WINAPI RtConverter::s_pthProcess_win(LPVOID args) {
+	RtConverter* svr = (RtConverter*)args;
+	svr->routineCheck();
+	return NULL;
+}
+#endif
+void* RtConverter::s_pthProcess(void* args) {
+	RtConverter* svr = (RtConverter*)args;
+	svr->routineCheck();
+	return NULL;
 }
 void RtConverter::routineCheck() {
 	time_t now;
-	int nbyte,ns;
+	int nbyte;
+	char cmd[256];
 	unsigned char buff[1024];
 	list<RtConvItem> item_sd;
+	sprintf(cmd, ":%d", port);
 	strinit(&svr);
-	stropen(&svr, STR_TCPSVR, STR_MODE_RW, ":8009");
+	stropen(&svr, STR_TCPSVR, STR_MODE_RW, cmd);
 	while (true) {
-		/* TEST FOR OUTPUT */
-		test_input();
+		/* test for re-read configures*/
 		item_sd.clear();
-		{
-			Locker(&this->_mutex);
-			time(&now);
-			list<RtConvItem>::reverse_iterator itrlist = obsqueue.rbegin();
-			while (itrlist != obsqueue.rend()) {
-				if (now - (*itrlist).gent >= obsdelay) {
-					break;
-				}
-				++itrlist;
+		def_lock(&_mutex);
+		time(&now);
+		list<RtConvItem>::reverse_iterator itrlist = obsqueue.rbegin();
+		while (itrlist != obsqueue.rend()) {
+			if (now - (*itrlist).gent >= obsdelay) {
+				break;
 			}
-			if (itrlist != obsqueue.rend()) {
-				gtime_t sd_t = (*itrlist).curt;
-				list<RtConvItem>::iterator itr = obsqueue.begin();
-				while (itr != obsqueue.end()) {
-					if ((*itr).curt.time > sd_t.time)  break;
-					item_sd.push_back(*itr);
-					itr = obsqueue.erase(itr);
-				}
+			++itrlist;
+		}
+		if (itrlist != obsqueue.rend()) {
+			gtime_t sd_t = (*itrlist).curt;
+			list<RtConvItem>::iterator itr = obsqueue.begin();
+			while (itr != obsqueue.end()) {
+				if ((*itr).curt.time > sd_t.time)  break;
+				item_sd.push_back(*itr);
+				itr = obsqueue.erase(itr);
 			}
 		}
+		def_unlock(&_mutex);
+
 		/// here to sending the observation 
 		list<RtConvItem>::iterator itr = item_sd.begin();
 		while (itr != item_sd.end()) {
@@ -110,51 +148,32 @@ void RtConverter::makeupObsBuffer(const char* sitname, const char* cprn, RtSatOb
 	sprintf(buffin, "%s %s", sitname, cprn);
 	for (ifreq = 0; ifreq < 2 * MAXFREQ; ifreq++) {
 		if (obs.obs[ifreq] != 0.0) {
-			sprintf(buffin + strlen(buffin), " %s %12.3lf", obs.fob[ifreq].c_str(), obs.obs[ifreq]);
+			sprintf(buffin + strlen(buffin), " %s %15.3lf", obs.fob[ifreq].c_str(), obs.obs[ifreq]);
 		}
 	}
 	strcat(buffin, "\r\n");
 	nbyte = strlen(buffin);
 	return;
 }
-void RtConverter::test_input() {
-	static gtime_t beg = { 0 };
-	if (beg.time == 0) {
-		double ep[] = { 2019,9,7,10,25,00 };
-		beg = epoch2time(ep);
-	}
-	else
-		beg.time++;
-	/* make up observation here */
-	RtConvItem item;
-	item.curt = beg;
-	map<string, RtSatObs> obs;
-
-	RtSatObs sat;
-	sat.obs[0] = 127172623.353;
-	sat.obs[1] = 111961948.919;
-	sat.obs[MAXFREQ] = 20981549.381;
-	sat.obs[MAXFREQ + 1] = 20981552.597;
-
-	sat.fob[0] = "L1C";
-	sat.fob[1] = "L2C";
-
-	sat.fob[MAXFREQ] = "C1C";
-	sat.fob[MAXFREQ + 1] = "C2P";
-
-	obs["G01"] = sat;
-	obs["G02"] = sat;
-	obs["G06"] = sat;
-
-	item.obslist["HKNP"] = obs;
-	item.obslist["HKTK"] = obs;
-
-	inputObs(item);
-
-	cout << "input observation " << beg.time << endl;
-}
 int main(int argc, char* args[]) {
-	RtConverter rtconv;
-	rtconv.routineCheck();
+	Deploy::s_initInstance(argc,args);
+	list<RtConverter*> rt_svrs;
+	Deploy dly = Deploy::s_getConfigures();
+	RtConverter rtconv_nrtk(1,dly.nrtkport); 
+	RtConverter rtconv_rtk(5,dly.rtkport); 
+	RtRinexStream poststr;
+
+	rt_svrs.push_back(&rtconv_nrtk);
+	rt_svrs.push_back(&rtconv_rtk);
+	/// post observation 
+	poststr.openStream(rt_svrs);
+	/// rt observation
+
+	rtconv_nrtk.beginProcess();
+	rtconv_rtk.beginProcess();
+	while (true) {
+		Deploy::s_updateConfigures();
+		sleepms(5000);
+	}
 }
 

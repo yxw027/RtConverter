@@ -42,6 +42,36 @@
     <ClCompile Include="src\RtConverter\RtConverter.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\Rnxobs\Com.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Rnxobs\RnxobsFile_sat.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Rnxobs\Patterns.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RtConverter\Deploy.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Rnxobs\RtRinexStream.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Json\json_reader.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Json\json_value.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Json\json_writer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Rnxobs\Rnxobs.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Rnxobs\Log.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Rtklib\rtklib.h">
@@ -59,5 +89,64 @@
     <ClInclude Include="include\RtConverter\RtConvItem.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="include\Rnxobs\Rnxobs.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Rnxobs\Patterns.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\RtConverter\Deploy.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Rnxobs\Com.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Rnxobs\RtRinexStream.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Json\json_tool.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Json\allocator.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Json\assertions.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Json\autolink.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Json\config.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Json\features.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Json\forwards.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Json\json.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Json\reader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Json\value.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Json\version.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Json\writer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Rnxobs\Log.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\Json\json_valueiterator.inl">
+      <Filter>头文件</Filter>
+    </None>
   </ItemGroup>
 </Project>

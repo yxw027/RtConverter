@@ -173,12 +173,18 @@ void Deploy::m_readConfiguresJson(bool lexit) {
 		for (i = 0; i < root[item]["vrs-list"].size(); i++) {
 			string svr = root[item]["vrs-list"][i]["server"].asCString();
 			list<VrsStaItem> list_items;
+			bamboo::excludeAnnoValue(value, root[item]["vrs-list"][i]["type"].asCString());
+			int type = VrsStaItem::stream_type::stream;
+			if (strstr(value, "vrs"))  type = VrsStaItem::stream_type::vrs;
 			for (ivrs = 0; ivrs < root[item]["vrs-list"][i]["sta-list"].size(); ivrs++) {
 				VrsStaItem vrsitem;
 				bamboo::excludeAnnoValue(value, root[item]["vrs-list"][i]["sta-list"][ivrs]["name"].asCString());
 				vrsitem.staname = value;
-				bamboo::excludeAnnoValue(value, root[item]["vrs-list"][i]["sta-list"][ivrs]["xyz"].asCString());
-				sscanf(value, "%lf%lf%lf", vrsitem.x, vrsitem.x + 1, vrsitem.x + 2);
+				vrsitem.type = type;
+				if (vrsitem.type == VrsStaItem::stream_type::vrs) {
+					bamboo::excludeAnnoValue(value, root[item]["vrs-list"][i]["sta-list"][ivrs]["xyz"].asCString());
+					sscanf(value, "%lf%lf%lf", vrsitem.x, vrsitem.x + 1, vrsitem.x + 2);
+				}
 				if (!m_checkStation(vrsitem.staname)) {
 					cout << "Existing same station,will continue for " << vrsitem.staname << endl;
 					continue;
@@ -205,6 +211,7 @@ bool Deploy::m_checkStation(string sta) {
 	list<string>::iterator strItr;
 	list<VrsStaItem>::iterator itemItr;
 	map<string, list<VrsStaItem>>::iterator mapItr;
+	/// should check more precisely
 	for (strItr = post_stalist.begin(); strItr != post_stalist.end(); strItr++) {
 		if ((*strItr) == sta) return false;
 	}

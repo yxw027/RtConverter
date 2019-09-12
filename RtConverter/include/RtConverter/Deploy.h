@@ -9,6 +9,10 @@ using namespace std;
 namespace bamboo {
 	class VrsStaItem{
 	public:
+		enum stream_type{
+			vrs, stream
+		};
+		int type; // identify whether it is vrs or mountpoint
 		double x[3];
 		string staname;
 	};

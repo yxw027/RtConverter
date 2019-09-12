@@ -6,6 +6,9 @@
 #include "../../include/Rnxobs/Rnxobs.h"
 using namespace bamboo;
 Deploy RtRinexStream::configs_sav;
+RtRinexStream::~RtRinexStream() {
+	lcont = false;
+}
 void RtRinexStream::openStream() {
 	configs_sav = Deploy::s_getConfigures();
 	def_thread_t pid_handle;
@@ -94,6 +97,10 @@ void RtRinexStream::m_routinue() {
 			break;
 		sleepms(1000);
 	}
+	for (rnxItr = m_rnxs.begin(); rnxItr != m_rnxs.end(); rnxItr++) {
+		delete (*rnxItr);
+	}
+	m_rnxs.clear();
 }
 RtConvItem RtRinexStream::m_makeupItems(int mjd,double sod,vector<RnxobsFile_sat*>& rnxs) {
 	int isat,isys,ifreq,week;

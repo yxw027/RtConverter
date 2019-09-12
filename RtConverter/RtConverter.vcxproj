@@ -174,6 +174,8 @@
     <ClCompile Include="src\Rtklib\rtcm3e.cpp" />
     <ClCompile Include="src\Rtklib\rtkcmn.cpp" />
     <ClCompile Include="src\Rtklib\stream.cpp" />
+    <ClCompile Include="src\VrsObs\ntripc.cpp" />
+    <ClCompile Include="src\VrsObs\VrsNtripClient.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Json\allocator.h" />
@@ -198,6 +200,8 @@
     <ClInclude Include="include\RtConverter\RtConvItem.h" />
     <ClInclude Include="include\Rtklib\rtklib.h" />
     <ClInclude Include="include\Rtklib\rtklib_fun.h" />
+    <ClInclude Include="include\VrsObs\ntripc.h" />
+    <ClInclude Include="include\VrsObs\VrsNtripClient.h" />
     <ClInclude Include="src\Json\json_tool.h" />
   </ItemGroup>
   <ItemGroup>

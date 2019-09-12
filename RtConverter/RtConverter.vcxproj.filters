@@ -72,6 +72,12 @@
     <ClCompile Include="src\Rnxobs\Log.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\VrsObs\ntripc.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\VrsObs\VrsNtripClient.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Rtklib\rtklib.h">
@@ -141,6 +147,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\Rnxobs\Log.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\VrsObs\ntripc.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\VrsObs\VrsNtripClient.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

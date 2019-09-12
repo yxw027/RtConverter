@@ -2,6 +2,7 @@
 #include "../../include/RtConverter/Const.h"
 #include "../../include/Rtklib/rtklib_fun.h"
 #include "../../include/Rnxobs/RtRinexStream.h"
+#include "../../include/VrsObs/VrsNtripClient.h"
 using namespace bamboo;
 RtConverter::RtConverter() {
 	initlock(&_mutex);
@@ -162,12 +163,13 @@ int main(int argc, char* args[]) {
 	RtConverter rtconv_nrtk(1,dly.nrtkport); 
 	RtConverter rtconv_rtk(5,dly.rtkport); 
 	RtRinexStream poststr;
+	VrsNtripClient vrsstr;
 
 	rt_svrs.push_back(&rtconv_nrtk);
 	rt_svrs.push_back(&rtconv_rtk);
 	/// post observation 
-	poststr.openStream(rt_svrs);
-	/// rt observation
+	//poststr.openStream(rt_svrs);
+	vrsstr.openStream(rt_svrs);
 
 	rtconv_nrtk.beginProcess();
 	rtconv_rtk.beginProcess();

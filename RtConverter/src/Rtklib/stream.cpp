@@ -1110,7 +1110,8 @@ static void discontcp(tcp_t *tcp, int tcon)
     tcp->tdis=tickget();
 
 	tcp->nbyte_tosend = 0;
-	free(tcp->buff_tosend);
+	if(tcp->buff_tosend != NULL)
+		free(tcp->buff_tosend);
 }
 /* open tcp server -----------------------------------------------------------*/
 static tcpsvr_t *opentcpsvr(const char *path, char *msg)

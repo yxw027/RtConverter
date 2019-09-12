@@ -7,6 +7,7 @@ namespace bamboo {
 	class RtConverter;
 	class RtRinexStream {
 	public:
+		~RtRinexStream();
 		void openStream();
 		void openStream(list<RtConverter*>&);
 		void closeStream();

@@ -22,6 +22,7 @@
 		"vrs-list":[
 			{
 			"server":"xxx:xxx@58.49.94.xxx:2101",
+			
 			"sta-list":[
 			{"name":"ABMF00GLP0","xyz":"0.0 0.0 0.0"},
 			{"name":"ALBH00CAN0","xyz":"0.0 0.0 0.0"},

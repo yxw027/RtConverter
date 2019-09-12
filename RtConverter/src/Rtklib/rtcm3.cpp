@@ -2121,7 +2121,7 @@ extern int decode_rtcm3(rtcm_t *rtcm)
 {
     int ret=0,type=getbitu(rtcm->buff,24,12);
 
-    printf("decode_rtcm3: len=%3d type=%d\n",rtcm->len,type);
+    trace(1,"decode_rtcm3: len=%3d type=%d\n",rtcm->len,type);
     if (rtcm->outtype) {
         sprintf(rtcm->msgtype,"RTCM %4d (%4d):",type,rtcm->len);
     }

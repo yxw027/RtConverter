@@ -28,7 +28,7 @@ namespace bamboo {
 	const unsigned char ATOMPREAMB = 0xDB;      /* atom preamble */
 	const int MAXFREQ = 3;
 	const int MAXSYS = 7;
-	const int MAXSAT = 130;
+	const int MAXSAT = 170;
 	const int MAXSIT = 500;
 	const int MAXOC = 120;
 	const int MAXOBSTYP = 50;

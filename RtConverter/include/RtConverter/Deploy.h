@@ -15,7 +15,13 @@ namespace bamboo {
 		int type; // identify whether it is vrs or mountpoint
 		double x[3];
 		string staname;
+		string strpath;
+		int lcheck;
 	};
+	inline bool operator ==(const VrsStaItem & v1, const VrsStaItem & v2) {
+		return v1.type == v2.type && fabs(v1.x[0] - v2.x[0]) < 0.01 &&
+			fabs(v1.x[1] - v2.x[1]) < 0.01 && fabs(v1.x[2] - v2.x[2]) < 0.01 && v1.strpath == v2.strpath && v1.staname == v2.staname;
+	}
 	class Deploy {
 	public:
 		Deploy();

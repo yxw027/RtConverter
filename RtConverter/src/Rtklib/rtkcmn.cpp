@@ -1620,6 +1620,23 @@ extern void ecef2pos(const double *r, double *pos)
 * return : none
 * notes  : WGS84, ellipsoidal height
 *-----------------------------------------------------------------------------*/
+extern void deg2dms(double deg, double *dms, int ndec)
+{
+	double sign = deg < 0.0 ? -1.0 : 1.0, a = fabs(deg);
+	double unit = pow(0.1, ndec);
+	dms[0] = floor(a); a = (a - dms[0])*60.0;
+	dms[1] = floor(a); a = (a - dms[1])*60.0;
+	dms[2] = floor(a / unit + 0.5)*unit;
+	if (dms[2] >= 60.0) {
+		dms[2] = 0.0;
+		dms[1] += 1.0;
+		if (dms[1] >= 60.0) {
+			dms[1] = 0.0;
+			dms[0] += 1.0;
+		}
+	}
+	dms[0] *= sign;
+}
 extern void pos2ecef(const double *pos, double *r)
 {
     double sinp=sin(pos[0]),cosp=cos(pos[0]),sinl=sin(pos[1]),cosl=cos(pos[1]);

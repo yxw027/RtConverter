@@ -89,7 +89,7 @@ void ntripc::sendreq() {
 		strinit(st_instance);
 		rts.push_back(*rt_instance);
 		sts.push_back(*st_instance);
-		RtConvItem *item = new(RtConvItem);
+		RtConvItem *item = new RtConvItem;
 		
 	}
 	while (true) {

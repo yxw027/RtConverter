@@ -3,6 +3,7 @@
 #include "../../include/Rnxobs/Com.h"
 #include <cstring>
 #include <cstdlib>
+#include <algorithm>
 #include <cstdio>
 using namespace std;
 using namespace bamboo;
@@ -63,7 +64,7 @@ void Deploy::m_readConfiguresJson(bool lexit) {
 	int iy, im, id, ih, imin, i, isys, j, ivrs, nsys, result,isat;
 	double dsec, seslen;
 	string item;
-	char value[1024] = { 0 }, freq[MAXSYS][LEN_STRING] = { 0 };
+	char value[1024] = { 0 }, freq[MAXSYS][LEN_STRING] = { 0 }, cmd[1024] = { 0 };
 
 	Json::CharReaderBuilder rbuilder;
 	rbuilder["collectComments"] = false;
@@ -175,7 +176,8 @@ void Deploy::m_readConfiguresJson(bool lexit) {
 			list<VrsStaItem> list_items;
 			bamboo::excludeAnnoValue(value, root[item]["vrs-list"][i]["type"].asCString());
 			int type = VrsStaItem::stream_type::stream;
-			if (strstr(value, "vrs"))  type = VrsStaItem::stream_type::vrs;
+			if (strstr(value, "vrs"))  
+				type = VrsStaItem::stream_type::vrs;
 			for (ivrs = 0; ivrs < root[item]["vrs-list"][i]["sta-list"].size(); ivrs++) {
 				VrsStaItem vrsitem;
 				bamboo::excludeAnnoValue(value, root[item]["vrs-list"][i]["sta-list"][ivrs]["name"].asCString());
@@ -189,6 +191,17 @@ void Deploy::m_readConfiguresJson(bool lexit) {
 					cout << "Existing same station,will continue for " << vrsitem.staname << endl;
 					continue;
 				}
+				memset(cmd, 0, sizeof(cmd));
+				if (vrsitem.type == VrsStaItem::stream_type::stream) {
+					if ('/' == svr.back())
+						sprintf(cmd, "%s%s", svr.c_str(), vrsitem.staname.c_str());
+					else
+						sprintf(cmd, "%s/%s", svr.c_str(), vrsitem.staname.c_str());
+				}
+				else {
+					sprintf(cmd, "%s", svr.c_str());
+				}
+				vrsitem.strpath = string(cmd);
 				list_items.push_back(vrsitem);
 			}
 			rt_mounts[svr] = list_items;
@@ -212,12 +225,17 @@ bool Deploy::m_checkStation(string sta) {
 	list<VrsStaItem>::iterator itemItr;
 	map<string, list<VrsStaItem>>::iterator mapItr;
 	/// should check more precisely
+	transform(sta.begin(), sta.end(), sta.begin(), ::toupper);
 	for (strItr = post_stalist.begin(); strItr != post_stalist.end(); strItr++) {
-		if ((*strItr) == sta) return false;
+		string value = (*strItr);
+		transform(value.begin(), value.end(), value.begin(), ::toupper);
+		if (!strncmp(sta.c_str(), value.c_str(), 4)) return false;
 	}
 	for (mapItr = rt_mounts.begin(); mapItr != rt_mounts.end(); mapItr++) {
 		for (itemItr = (*mapItr).second.begin(); itemItr != (*mapItr).second.end(); ++itemItr) {
-			if ((*itemItr).staname == sta) return false;
+			string value = (*itemItr).staname;
+			transform(value.begin(), value.end(), value.begin(), ::toupper);
+			if (!strncmp(sta.c_str(), value.c_str(), 4)) return false;
 		}
 	}
 	return true;

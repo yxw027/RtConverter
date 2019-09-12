@@ -21,6 +21,11 @@ namespace bamboo {
 		void m_routine();
 		void m_sendGGAReq(stream_t*,VrsStaItem&);
 		void m_adaptConfigures();
+
+
+		void m_newConnection(VrsStaItem&);
+		void m_deleteConnection(string staname);
+
 		bool lcont;
 		time_t lastCheck;
 		Deploy configs_sav;

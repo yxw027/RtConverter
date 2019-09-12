@@ -26,16 +26,19 @@ int RtConverter::inputObs(RtConvItem& item) {
 	}
 	RtConvItem& front = this->obsqueue.front();
 	RtConvItem& end = this->obsqueue.back();
-	if (item.curt.time < front.curt.time) return 0;
+	if (item.curt.time < front.curt.time) {
+		def_unlock(&_mutex);
+		return 0;
+	}
 	if (item.curt.time > end.curt.time) {
 		this->obsqueue.push_back(item);
 		def_unlock(&_mutex);
 		return 1;
 	}
-	list<RtConvItem>::iterator itrlist, itrfind = obsqueue.end();
-	itrlist = obsqueue.begin();
-	while (item.curt.time > (*itrlist).curt.time) {
-		itrlist++;
+	list<RtConvItem>::iterator itrlist;
+	for (itrlist = obsqueue.begin(); itrlist != obsqueue.end(); ++itrlist) {
+		if (item.curt.time <= (*itrlist).curt.time)
+			break;
 	}
 	if ((*itrlist).curt.time != item.curt.time) {
 		obsqueue.insert(itrlist, item);
@@ -47,7 +50,10 @@ int RtConverter::inputObs(RtConvItem& item) {
 	std::map<std::string, std::map<std::string, RtSatObs> >::iterator obitr_mem = (*itrlist).obslist.begin();
 	while (obitr_in != item.obslist.end()) {
 		itr = (*itrlist).obslist.find((*obitr_in).first);
-		if (itr != (*itrlist).obslist.end()) continue;
+		if (itr != (*itrlist).obslist.end()) {
+			++obitr_in;
+			continue;
+		}
 		(*itrlist).obslist[(*obitr_in).first] = (*obitr_in).second;
 		++obitr_in;
 	}
@@ -114,7 +120,9 @@ void RtConverter::routineCheck() {
 		/// here to sending the observation 
 		list<RtConvItem>::iterator itr = item_sd.begin();
 		while (itr != item_sd.end()) {
-			cout << "begin to sending observation here " << (*itr).curt.time << endl;
+			char strbuf[1024] = { 0 };
+			time2str((*itr).curt, strbuf, 2);
+			printf("Thread %010d,begin to sending observation %s\n", def_pthread_id_self(), strbuf);
 			/// generate the buff here
 			memset(buff, 0, sizeof(buff));
 			makeupTimeBuffer((*itr).curt, (char*)buff, nbyte);
@@ -160,8 +168,8 @@ int main(int argc, char* args[]) {
 	Deploy::s_initInstance(argc,args);
 	list<RtConverter*> rt_svrs;
 	Deploy dly = Deploy::s_getConfigures();
-	RtConverter rtconv_nrtk(1,dly.nrtkport); 
-	RtConverter rtconv_rtk(5,dly.rtkport); 
+	RtConverter rtconv_nrtk(5,dly.nrtkport); 
+	RtConverter rtconv_rtk(10,dly.rtkport); 
 	RtRinexStream poststr;
 	VrsNtripClient vrsstr;
 

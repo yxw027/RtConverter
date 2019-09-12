@@ -21,7 +21,7 @@
 	"rt-configures":{
 		"vrs-list":[
 			{
-			"server":"qlz:xxxxx@58.49.94.212:2101",
+			"server":"xxx:xxxxx@58.49.94.234:2101",
 			"sta-list":[
 			{"name":"ABMF00GLP0","xyz":"0.0 0.0 0.0"},
 			{"name":"ALBH00CAN0","xyz":"0.0 0.0 0.0"},

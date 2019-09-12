@@ -21,7 +21,7 @@
 	"rt-configures":{
 		"vrs-list":[
 			{
-			"server":"qlz:qulizhong123@58.49.94.212:2101",
+			"server":"xxx:xxx@58.49.94.xxx:2101",
 			"sta-list":[
 			{"name":"ABMF00GLP0","xyz":"0.0 0.0 0.0"},
 			{"name":"ALBH00CAN0","xyz":"0.0 0.0 0.0"},
@@ -30,7 +30,7 @@
 			"type":"stream"
 			},
 			{
-			"server":"001:123@120.204.202.102:8091/RTCM_GGB",
+			"server":"xxx:xxx@120.204.202.xxx:8091/RTCM_GGB",
 			"sta-list":[
 			{"name":"VR01","xyz":" -2838958.9610  4649821.8880  3305579.4660"},
 			{"name":"VR02","xyz":" -2859304.8860  4649091.3200  3289153.2510"},

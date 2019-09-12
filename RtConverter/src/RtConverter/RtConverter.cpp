@@ -176,7 +176,7 @@ int main(int argc, char* args[]) {
 	rt_svrs.push_back(&rtconv_nrtk);
 	rt_svrs.push_back(&rtconv_rtk);
 	/// post observation 
-	//poststr.openStream(rt_svrs);
+	poststr.openStream(rt_svrs);
 	vrsstr.openStream(rt_svrs);
 
 	rtconv_nrtk.beginProcess();

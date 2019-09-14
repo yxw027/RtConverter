@@ -29,6 +29,20 @@ void Patterns::readFile(){
 	nfile = 0;
 	strcpy(fname[nfile], "rnxo");
 	strcpy(fform[nfile++], "-STANAM--DDD-0.-YY-o");
+	strcpy(fname[nfile], "rnxn");
+	strcpy(fform[nfile++], "-brd0--DDD-0.-YY-n");
+	strcpy(fname[nfile], "rnxg");
+	strcpy(fform[nfile++], "-brd0--DDD-0.-YY-g");
+	strcpy(fname[nfile], "rnxl");
+	strcpy(fform[nfile++], "-brd0--DDD-0.-YY-l");
+	strcpy(fname[nfile], "rnxb");
+	strcpy(fform[nfile++], "-brd0--DDD-0.-YY-b");
+	strcpy(fname[nfile], "rnxc");
+	strcpy(fform[nfile++], "-brd0--DDD-0.-YY-c");
+	strcpy(fname[nfile], "rnxq");
+	strcpy(fform[nfile++], "-brd0--DDD-0.-YY-q");
+	strcpy(fname[nfile], "rnxp");
+	strcpy(fform[nfile++], "-brd0--DDD-0.-YY-p");
 }
 void Patterns::m_getPatternName(int ldefined, const char* keyword, const char* param_list, int iyear,
 		int imonth, int iday, int ihour, char* name) {

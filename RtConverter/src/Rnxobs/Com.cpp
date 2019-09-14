@@ -1,27 +1,22 @@
-/*
- * utils.cpp
- *
- *  Created on: 2018年2月4日
- *      Author: doublestring
- */
-#include "../../include/Rnxobs/Com.h"
 #include <iostream>
 #include <cstdlib>
 #include <cstring>
-#include <cmath>
 #include <string>
 #include <map>
 #include <fstream>
+#include <cmath>
+#include "../../include/Rnxobs/Com.h"
 #include "../../include/Rtklib/rtklib_fun.h"
+#include "../../include/Rnxbrd/OrbitClk.h"
 using namespace std;
 namespace bamboo{
 int md_julday(int iyear,int imonth,int iday){
-	char errmsg[256];
 	int iyr, result;
 	int doy_of_month[12] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304,
 			334 };
 	if (iyear < 0 || imonth < 0 || iday < 0 || imonth > 12 || iday > 366
 			|| (imonth != 0 && iday > 31)) {
+		printf("iyear = %d,imonth = %d,iday = %d,incorrect argument",iyear,imonth,iday);
 		exit(1);
 	}
 	iyr = iyear;
@@ -54,6 +49,24 @@ void mjd2doy(int jd, int* iyear, int* idoy) {
 	}
 }
 
+void cur_time(int* mjd,double* sod){
+//	struct timeval tv;
+//    struct tm* ptr;
+//	gettimeofday(&tv,NULL);
+//	ptr = gmtime (&tv.tv_sec);
+//	*mjd = md_julday(ptr->tm_year + 1900,ptr->tm_mon + 1,ptr->tm_mday);
+//	*sod = ptr->tm_hour * 3600.0 + ptr->tm_min * 60.0 + ptr->tm_sec + tv.tv_usec / 1e6;
+//
+//	timinc(*mjd, *sod, Taiutc::s_getInstance()->m_getTaiutc(*mjd) - 19.0, mjd, sod);
+	struct tm *ptr;
+	time_t rawtime;
+	time(&rawtime);
+	ptr = gmtime(&rawtime);
+	*mjd = md_julday(ptr->tm_year + 1900,ptr->tm_mon + 1,ptr->tm_mday);
+	*sod = ptr->tm_hour * 3600.0 + ptr->tm_min * 60.0 + ptr->tm_sec;
+	// 从UTC转成GPST
+	timinc(*mjd, *sod, 38 - 19.0, mjd, sod);
+}
 void timinc(int jd, double sec, double delt, int* jd1, double* sec1) {
 	*sec1 = sec + delt;
 	int inc = (int) (*sec1 / 86400.0);
@@ -63,6 +76,15 @@ void timinc(int jd, double sec, double delt, int* jd1, double* sec1) {
 		return;
 	*jd1 = *jd1 - 1;
 	*sec1 = *sec1 + 86400;
+}
+char* runtime(char* buf){
+	int iy,im,id,ih,imin,mjd;
+	double dsec,sod;
+	cur_time(&mjd,&sod);
+	mjd2date(mjd,sod,&iy,&im,&id,&ih,&imin,&dsec);
+	if(buf!=NULL)
+		sprintf(buf,"%02d-%02d-%02d %02d:%02d:%02d",iy,im,id,ih,imin,(int)dsec);
+	return buf;
 }
 char* runlocaltime(char* buf){
 	int iy, im, id, ih, imin, mjd;
@@ -170,11 +192,44 @@ void mjd2date(int jd, double sod, int* iyear, int* imonth, int* iday, int* ih,
 	mjd2doy(jd, iyear, &doy);
 	yeardoy2monthday(*iyear, doy, imonth, iday);
 
-	*ih = (int) sod / 3600.0;
-	*imin = (int) ((sod - (*ih) * 3600.0) / 60.0);
+	*ih =  static_cast<int>( sod / 3600.0);
+	*imin = static_cast<int> ((sod - (*ih) * 3600.0) / 60.0);
 	*sec = sod - (*ih) * 3600.0 - (*imin) * 60.0;
 }
-
+void fillobs(char* line,int nobs,int itemlen,double ver){
+	int OFFSET = 0,len,i;
+	char tmp[256];
+	if(ver > 3.0)
+		OFFSET = 3;
+	len = len_trim(line);
+	for(i = len;i < itemlen * nobs + OFFSET;i++)
+		line[i] = ' ';
+	line[itemlen * nobs + OFFSET] = '\0';
+	for(i = 0;i < nobs;i++){
+		memset(tmp,0,sizeof(char) * 256);
+		substringEx(tmp,line + OFFSET + i * itemlen,0,itemlen - 2); // last is signal strength
+		if(len_trim(tmp) == 0){
+			line[itemlen * i + OFFSET + 1] = '0';
+		}
+	}
+}
+void filleph(char* line,double ver){
+	int i,len,cpre = 4;
+	char tmp[128];
+	if(ver < 3.0)
+		cpre = 3;
+	len = len_trim(line);
+	for(i = len;i < cpre + 19 * 4;i++){
+		line[i] = ' ';
+	}
+	line[cpre + 19 * 4] = '\0';
+	for (i = 0; i < 4; i++) {
+		substringEx(tmp, line + cpre + 19 * i, 0, 19);
+		if (len_trim(tmp) == 0) {
+			line[cpre + 19 * i + 1] = '0';
+		}
+	}
+}
 int pointer_string(int cnt,string string_array[],string str){
 	int itr,idx = -1;
 	for(itr = 0;itr < cnt;itr++){
@@ -540,7 +595,7 @@ void phase_windup_itrs(int* lfirst, double (*rot_f2j)[3], double (*rot_l2f)[3],
 	//           dphi0 -- initial dphi
 	//           dphi  --  phase correction
 	int j, n;
-	double x_f[3], y_f[3], x_j[3], y_j[3], dummy[3], rlength, kusi;
+	double x_f[3], y_f[3], dummy[3], rlength, kusi;
 	double k[3], d_r[3], d_s[3];
 	// right hand system
 	double x_l[3] = { 0.0, 1.0, 0.0 };
@@ -597,33 +652,7 @@ void phase_windup_itrs(int* lfirst, double (*rot_f2j)[3], double (*rot_l2f)[3],
 	// save for the next epoch
 	(*dphi0) = (*dphi);
 }
-void cur_time(int* mjd, double* sod) {
-	//	struct timeval tv;
-	//    struct tm* ptr;
-	//	gettimeofday(&tv,NULL);
-	//	ptr = gmtime (&tv.tv_sec);
-	//	*mjd = md_julday(ptr->tm_year + 1900,ptr->tm_mon + 1,ptr->tm_mday);
-	//	*sod = ptr->tm_hour * 3600.0 + ptr->tm_min * 60.0 + ptr->tm_sec + tv.tv_usec / 1e6;
-	//
-	//	timinc(*mjd, *sod, Taiutc::s_getInstance()->m_getTaiutc(*mjd) - 19.0, mjd, sod);
-	struct tm *ptr;
-	time_t rawtime;
-	time(&rawtime);
-	ptr = gmtime(&rawtime);
-	*mjd = md_julday(ptr->tm_year + 1900, ptr->tm_mon + 1, ptr->tm_mday);
-	*sod = ptr->tm_hour * 3600.0 + ptr->tm_min * 60.0 + ptr->tm_sec;
-	// 从UTC转成GPST
-	timinc(*mjd, *sod, 38 - 19.0, mjd, sod);
-}
-char* runtime(char* buf) {
-	int iy, im, id, ih, imin, mjd;
-	double dsec, sod;
-	cur_time(&mjd, &sod);
-	mjd2date(mjd, sod, &iy, &im, &id, &ih, &imin, &dsec);
-	if (buf != NULL)
-		sprintf(buf, "%02d-%02d-%02d %02d:%02d:%02d", iy, im, id, ih, imin, (int)dsec);
-	return buf;
-}
+
 void phase_windup(int* lfirst, double (*rot_f2j)[3], double (*rot_l2f)[3],
 		double* xbf, double* ybf, double* zbf, double* xrec2sat, double* dphi0,
 		double* dphi) {
@@ -687,6 +716,88 @@ void phase_windup(int* lfirst, double (*rot_f2j)[3], double (*rot_l2f)[3],
 	// save for the next epoch
 	(*dphi0) = (*dphi);
 }
+void getfreq(char csys, char* freq, int ifreq, double* val) {
+	switch (csys) {
+	case 'G':
+		if (strstr(freq, "L1") != NULL)
+			*val = GPS_L1;
+		else if (strstr(freq, "L2") != NULL)
+			*val = GPS_L2;
+		else if (strstr(freq, "L5") != NULL)
+			*val = GPS_L5;
+		else {
+			printf("freq = %s,unknow frequency for GPS",freq);
+			exit(1);
+		}
+		break;
+	case 'R':
+		if (strstr(freq, "L1") != NULL)
+			*val = GLS_L1 + ifreq * GLS_dL1;
+		else if (strstr(freq, "L2") != NULL)
+			*val = GLS_L2 + ifreq * GLS_dL2;
+		else {
+			printf("freq = %s,unknow frequency for GLONASS",freq);
+			exit(1);
+		}
+		break;
+	case 'E':
+		if (strstr(freq, "L1") != NULL)
+			*val = GAL_E1;
+		else if (strstr(freq, "L8") != NULL)
+			*val = GAL_E5;
+		else if (strstr(freq, "L6") != NULL)
+			*val = GAL_E6;
+		else if (strstr(freq, "L5") != NULL)
+			*val = GAL_E5a;
+		else if (strstr(freq, "L7") != NULL)
+			*val = GAL_E5b;
+		else {
+			printf("freq = %s,unknow frequency for GALILEO",freq);
+			exit(1);
+		}
+		break;
+	case 'C':
+		if (strstr(freq, "L1") != NULL || strstr(freq, "L2") != NULL)
+			*val = BDS_B1;
+		else if (strstr(freq, "L7") != NULL)
+			*val = BDS_B2;
+		else if (strstr(freq, "L6") != NULL)
+			*val = BDS_B3;
+		else {
+			printf("freq = %s,unknow frequency for BDS",freq);
+			exit(1);
+		}
+		break;
+	case 'J':
+		if (strstr(freq, "L1") != NULL)
+			*val = QZS_L1;
+		else if (strstr(freq, "L2") != NULL)
+			*val = QZS_L2;
+		else if (strstr(freq, "L5") != NULL)
+			*val = QZS_L5;
+		else if (strstr(freq, "L6") != NULL)
+			*val = QZS_LEX;
+		else {
+			printf("freq = %s,unknow frequency for QZSS",freq);
+			exit(1);
+		}
+		break;
+	default:
+		printf("freq = %s,unknow frequency",freq);
+		exit(1);
+	}
+}
+void brdtime(char* cprn,int *mjd,double *sod){
+	switch (cprn[0]) {
+	case 'C':
+	case 'B':
+		timinc(*mjd, *sod, 14.0, mjd, sod);
+		break;
+	case 'R':
+		timinc(*mjd, *sod, 38 - 19.0, mjd, sod);
+		break;
+	}
+}
 
 int sum(int array[], int ndim) {
 	int i, sum0 = 0;
@@ -708,7 +819,6 @@ int all(int* vx,int n,int value){
 	}
 	return ret;
 }
-
 bool chos(int ndel, int imax, int* idel) {
 	int i, ic;
 	if (imax < ndel)
@@ -913,7 +1023,61 @@ unsigned long CRC24(long size, const unsigned char *buf) {
 	}
 	return crc;
 }
+unsigned int getbdsiode(GPSEPH& bdseph) {
+	unsigned char buffer[80];
+	int size = 0;
+	int numbits = 0;
+	long long bitbuffer = 0;
+	unsigned char *startbuffer = buffer;
 
+	BDSADDBITSFLOAT(14, bdseph.idot, M_PI/(double)(1<<30)/(double)(1<<13));
+	BDSADDBITSFLOAT(11, bdseph.a2,
+			1.0 / (double )(1 << 30) / (double )(1 << 30) / (double )(1 << 6));
+	BDSADDBITSFLOAT(22, bdseph.a1,
+			1.0 / (double )(1 << 30) / (double )(1 << 20));
+	BDSADDBITSFLOAT(24, bdseph.a0, 1.0 / (double )(1 << 30) / (double )(1 << 3));
+	BDSADDBITSFLOAT(18, bdseph.crs, 1.0 / (double )(1 << 6));
+	BDSADDBITSFLOAT(16, bdseph.dn, M_PI/(double)(1<<30)/(double)(1<<13));
+	BDSADDBITSFLOAT(32, bdseph.m0, M_PI/(double)(1<<30)/(double)(1<<1));
+	BDSADDBITSFLOAT(18, bdseph.cuc,
+			1.0 / (double )(1 << 30) / (double )(1 << 1));
+	BDSADDBITSFLOAT(32, bdseph.e, 1.0 / (double )(1 << 30) / (double )(1 << 3));
+	BDSADDBITSFLOAT(18, bdseph.cus,
+			1.0 / (double )(1 << 30) / (double )(1 << 1));
+	BDSADDBITSFLOAT(32, bdseph.roota, 1.0 / (double )(1 << 19));
+	BDSADDBITSFLOAT(18, bdseph.cic,
+			1.0 / (double )(1 << 30) / (double )(1 << 1));
+	BDSADDBITSFLOAT(32, bdseph.omega0, M_PI/(double)(1<<30)/(double)(1<<1));
+	BDSADDBITSFLOAT(18, bdseph.cis,
+			1.0 / (double )(1 << 30) / (double )(1 << 1));
+	BDSADDBITSFLOAT(32, bdseph.i0, M_PI/(double)(1<<30)/(double)(1<<1));
+	BDSADDBITSFLOAT(18, bdseph.crc, 1.0 / (double )(1 << 6));
+	BDSADDBITSFLOAT(32, bdseph.omega, M_PI/(double)(1<<30)/(double)(1<<1));
+	BDSADDBITSFLOAT(24, bdseph.omegadot, M_PI/(double)(1<<30)/(double)(1<<13));
+	BDSADDBITS(5, 0); // the last byte is filled by 0-bits to obtain a length of an integer multiple of 8
+
+	return CRC24(size, startbuffer);
+}
+int genAode(char csys,int mjd,double sod,double toe,int inade,GPSEPH* eph){
+	int ret = -1;
+	if(csys == 'G')
+		ret = inade;
+	else if(csys == 'R'){
+		ret = NINT(fmod(sod + 10800.0, 86400.0) / 900.0);
+	}
+	else if(csys == 'E'){
+		// ret = NINT(sod / 600.0) + 1;
+		//IGMAS:
+		ret = inade;
+	}
+	else if(csys == 'C'){
+		// ret = NINT(sod / 1800.0) + 1;
+		//IGMAS:
+		//ret = NINT(fmod(toe, 86400.0) / 450.0);
+		ret = getbdsiode(*eph);
+	}
+	return ret;
+}
 void bdsCodeCorbyElv(int Prn, double elvRad, double* codeCor){
 	int i = 0, j = 0;
 	static double coef[14][3][3] = {
@@ -944,20 +1108,19 @@ int getNoZeroCount(double* xl,int n){
 			ret++;
 	return ret;
 }
-void excludeAnnoValue(char* value, const char* in) {
-	int num = 0, lstart = false;
+void excludeAnnoValue(char* value,const char* in){
+	int num = 0,lstart = false;
 	const char* ptr = in;
-	while (*ptr != '\0') {
-		if (lstart == false && (*ptr == ' ' || *ptr == '\n' || *ptr == '\t')) {
+	while(*ptr != '\0'){
+		if(lstart == false && (*ptr == ' ' || *ptr == '\n' || *ptr == '\t')){
 			++ptr;
 			continue;
 		}
 		lstart = true;
-		if (*ptr != '#' && *ptr != '!') {
+		if(*ptr != '#' && *ptr != '!'){
 			value[num++] = *ptr;
 			++ptr;
-		}
-		else
+		}else
 			break;
 	}
 	value[num++] = '\0';
@@ -981,20 +1144,50 @@ string zipJson(string json){
 	delete[] zipPtr;
 	return zipStr;
 }
-void fillobs(char* line,int nobs,int itemlen,double ver){
-	int OFFSET = 0,len,i;
-	char tmp[256];
-	if(ver > 3.0)
-		OFFSET = 3;
-	len = len_trim(line);
-	for(i = len;i < itemlen * nobs + OFFSET;i++)
-		line[i] = ' ';
-	line[itemlen * nobs + OFFSET] = '\0';
-	for(i = 0;i < nobs;i++){
-		memset(tmp,0,sizeof(char) * 256);
-		substringEx(tmp,line + OFFSET + i * itemlen,0,itemlen - 2); // last is signal strength
-		if(len_trim(tmp) == 0){
-			line[itemlen * i + OFFSET + 1] = '0';
+void bds_code_cor(char *ctype, int nfreq, char cfreq[MAXFREQ][LEN_FREQ],
+		double elev, double *bias) {
+	int isat, i, idx, ifreq[3] = { 0 };
+	double alpha;
+	static double coef[2][3][10] = { -0.11, -0.11, -0.09, -0.07, -0.02, -0.08,
+			0.13, 0.24, 0.25, 0.33, -0.06, -0.11, -0.07, -0.05, -0.01, 0.06,
+			0.11, 0.19, 0.26, 0.28, -0.27, -0.23, -0.21, -0.15, -0.11, -0.04,
+			0.05, 0.14, 0.19, 0.32, -0.13, -0.20, -0.17, -0.12, -0.04, 0.10,
+			0.32, 0.61, 0.82, 0.92, -0.12, -0.16, -0.12, -0.09, -0.01, 0.10,
+			0.25, 0.42, 0.56, 0.64, -0.22, -0.15, -0.13, -0.10, -0.04, 0.05,
+			0.14, 0.27, 0.36, 0.47 };
+	if (nfreq > 3) {
+		printf("the number of frequency is more than 3");
+		printf(
+				"***ERROR(bds_code_cor):the number of frequency is more than 3!\n");
+		exit(1);
+	}
+	if (strstr(ctype, "BEIDOU-2I")) {
+		isat = 0;
+	} else if (strstr(ctype, "BEIDOU-2M")) {
+		isat = 1;
+	} else {
+		return;
+	}
+	for (i = 0; i < nfreq; i++) {
+		if (strstr(cfreq[i], "L2") || strstr(cfreq[i],"L1"))
+			ifreq[i] = 0;
+		if (strstr(cfreq[i], "L7"))
+			ifreq[i] = 1;
+		if (strstr(cfreq[i], "L6"))
+			ifreq[i] = 2;
+	}
+	if (elev <= 0.0) {
+		for (i = 0; i < nfreq; i++)
+			bias[i] = coef[isat][ifreq[i]][0];
+	} else if (elev >= 90.0) {
+		for (i = 0; i < nfreq; i++)
+			bias[i] = coef[isat][ifreq[i]][9];
+	} else {
+		idx = (int) (elev / 10.0);
+		for (i = 0; i < nfreq; i++) {
+			alpha = (coef[isat][ifreq[i]][idx + 1] - coef[isat][ifreq[i]][idx])
+					/ 10.0;
+			bias[i] = alpha * (elev - idx * 10.0) + coef[isat][ifreq[i]][idx];
 		}
 	}
 }

@@ -97,8 +97,11 @@ void Deploy::m_readConfiguresJson(bool lexit) {
 			- (this->mjd1 - this->mjd0) * 86400.0;
 		bamboo::excludeAnnoValue(value, root[item]["interval"].asCString());
 		sscanf(value, "%lf", &dintv);
+
+		bamboo::excludeAnnoValue(value, root[item]["speed"].asCString());
+		sscanf(value, "%d", &speed);
+
 		bamboo::excludeAnnoValue(value, root[item]["freqused"].asCString());
-		
 		split_string(true, value, ' ', ' ', ' ', &nsys, (char*)freq,
 			LEN_STRING);
 		for (i = 0; i < nsys; i++) {
@@ -153,6 +156,7 @@ void Deploy::m_readConfiguresJson(bool lexit) {
 		
 		bamboo::excludeAnnoValue(obsdir, root[item]["obsdir"].asCString());
 		bamboo::excludeAnnoValue(outdir, root[item]["outdir"].asCString());
+		bamboo::excludeAnnoValue(ephdir, root[item]["brdmdir"].asCString());
 		for (i = 0; i < root[item]["sta-list"].size(); i++) {
 			bamboo::excludeAnnoValue(value, root[item]["sta-list"][i].asCString());
 			if (!m_checkStation(value)) {
@@ -211,6 +215,9 @@ void Deploy::m_readConfiguresJson(bool lexit) {
 
 		bamboo::excludeAnnoValue(value, root[item]["rtk-port"].asCString());
 		sscanf(value, "%d", &rtkport);
+
+		bamboo::excludeAnnoValue(value, root[item]["eph-port"].asCString());
+		sscanf(value, "%d", &ephport);
 		
 		result = stat(f_jsonConfigures, &st);
 		lastAct = st.st_mtime;

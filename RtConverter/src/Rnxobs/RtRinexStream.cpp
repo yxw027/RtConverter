@@ -4,6 +4,9 @@
 #include "../../include/RtConverter/RtConvItem.h"
 #include "../../include/RtConverter/RtConverter.h"
 #include "../../include/Rnxobs/Rnxobs.h"
+#include "../../include/Rnxbrd/OrbitClk.h"
+#include <list>
+
 using namespace bamboo;
 Deploy RtRinexStream::configs_sav;
 RtRinexStream::~RtRinexStream() {
@@ -55,16 +58,19 @@ DWORD WINAPI RtRinexStream::s_pthRniexStream_win(LPVOID args) {
 void RtRinexStream::m_routinue() {
 	time_t tt;
 	/// open first
-	int curmjd,mjd;
+	int curmjd,mjd,isat;
 	double sod;
 	list<string>::iterator sitr;
 	list<RtConverter*>::iterator convItr;
 	vector<RnxobsFile_sat*>::iterator rnxItr;
 	RnxobsFile_sat* rnx;
+	list<GPSEPH> eph_g;
+	list<GLSEPH> eph_r;
 	for (sitr = configs_sav.post_stalist.begin(); sitr != configs_sav.post_stalist.end(); sitr++) {
 		rnx = new RnxobsFile_sat(*sitr);
 		m_rnxs.push_back(rnx);
 	}
+	mOacs = new RnxEphFileAdapter();
 	mjd = configs_sav.mjd0;
 	sod = configs_sav.sod0;
 	while (lcont) {
@@ -73,17 +79,42 @@ void RtRinexStream::m_routinue() {
 			lastCheck = tt;
 			m_adaptConfigures();
 		}
+		/// open observation here
 		for (rnxItr = m_rnxs.begin(); rnxItr != m_rnxs.end(); rnxItr++) {
 			if (!(*rnxItr)->v_isOpen()) {
 				(*rnxItr)->v_openRnx(toString(mjd) + ":" + toString(sod));
 			}
 			(*rnxItr)->v_readEpoch(mjd, sod);
 		}
+		/// open brdm here 
+		if(!mOacs->v_isOpen())
+			mOacs->v_openRnxEph(toString(mjd) + ":" + toString(sod));
 		/// will update to the main thread
 		RtConvItem curitem = m_makeupItems(mjd,sod,m_rnxs);
 		for (convItr = m_svrs.begin(); convItr != m_svrs.end(); convItr++) {
-			if(curitem.obslist.size() > 0)
+			if((*convItr)->getType() == RtConverter::ConvType::obs && curitem.obslist.size() > 0)
 				(*convItr)->inputObs(curitem);
+		}
+		/// got brdm here
+		for (isat = 0; isat < configs_sav.nprn; isat++) {
+			if (configs_sav.cprn[isat][0] == 'R') {
+				eph_r.clear();
+				if (m_makeupEph_R(eph_r,configs_sav.cprn[isat], mjd, sod)) {
+					for (convItr = m_svrs.begin(); convItr != m_svrs.end(); convItr++) {
+						if ((*convItr)->getType() == RtConverter::ConvType::eph) 
+							(*convItr)->inputBrdm_R(configs_sav.cprn[isat],eph_r);
+					}
+				}
+			}
+			else {
+				eph_g.clear();
+				if (m_makeupEph_G(eph_g,configs_sav.cprn[isat], mjd, sod)) {
+					for (convItr = m_svrs.begin(); convItr != m_svrs.end(); convItr++) {
+						if ((*convItr)->getType() == RtConverter::ConvType::eph)
+							(*convItr)->inputBrdm_G(configs_sav.cprn[isat],eph_g);
+					}
+				}
+			}
 		}
 		curmjd = mjd;
 		timinc(mjd, sod, configs_sav.dintv, &mjd, &sod);
@@ -92,10 +123,11 @@ void RtRinexStream::m_routinue() {
 				(*rnxItr)->v_closeRnx();
 				(*rnxItr)->v_closeOutFile();
 			}
+			mOacs->v_closeRnxEph();
 		}
 		if ((mjd - configs_sav.mjd1) * 86400.0 + sod - configs_sav.sod1 >= 0.0)
 			break;
-		sleepms(1000);
+		sleepms(NINT(configs_sav.dintv * 1000/configs_sav.speed));
 	}
 	for (rnxItr = m_rnxs.begin(); rnxItr != m_rnxs.end(); rnxItr++) {
 		delete (*rnxItr);
@@ -180,3 +212,13 @@ void* RtRinexStream::s_pthRinexStream(void* args) {
 	str->m_routinue();
 	return NULL;
 }
+bool RtRinexStream::m_makeupEph_G(list<GPSEPH>& list_in,string cprn,int mjd,double sod) {
+	list_in = mOacs->m_getCurrentEph_G(cprn,mjd,sod);
+	return true;
+}
+bool RtRinexStream::m_makeupEph_R(list<GLSEPH>& list_in,string cprn,int mjd, double sod) {
+	list_in = mOacs->m_getCurrentEph_R(cprn,mjd, sod);
+	return true;
+}
+
+

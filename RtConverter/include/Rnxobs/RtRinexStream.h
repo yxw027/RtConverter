@@ -3,6 +3,8 @@
 #include "../RtConverter/Deploy.h"
 #include "../Rnxobs/Rnxobs.h"
 #include "../RtConverter/RtConvItem.h"
+#include "../Rnxbrd/OrbitClk.h"
+#include <list>
 namespace bamboo {
 	class RtConverter;
 	class RtRinexStream {
@@ -20,9 +22,12 @@ namespace bamboo {
 		void m_routinue();
 		RtConvItem m_makeupItems(int mjd,double sod,vector<RnxobsFile_sat*>&);
 		vector<RnxobsFile_sat*> m_rnxs;
+		RnxEphFileAdapter* mOacs;
 		bool lcont;
 		list<RtConverter*> m_svrs;
 		time_t lastCheck;
+		bool m_makeupEph_G(list<GPSEPH>&,string cprn,int mjd,double sod);
+		bool m_makeupEph_R(list<GLSEPH>&,string cprn,int mjd,double sod);
 	protected:
 		static void* s_pthRinexStream(void*);
 		static Deploy configs_sav;

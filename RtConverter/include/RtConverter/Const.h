@@ -40,6 +40,21 @@ namespace bamboo {
 	const int MAXPNT = 2 * (MAXDGR + 1);
 	const int MAXVARS = 3 * (MAXICS + 1);
 
+	const int ORB_NONE = 0;
+	const int ORB_RTSP3 = 1;
+	const int ORB_SP3 = 2;
+	const int ORB_BRD = 3;
+	const int ORB_RTBRD = 4;
+	const int ORB_PREBRD = 5;
+
+	const int CLK_NONE = 0;
+	const int CLK_BRD = 6;
+	const int CLK_RTBRD = 7;
+	const int CLK_PREBRD = 8;
+	const int CLK_SP3 = 9;
+
+
+
 	const int MINCMNSIT = 4;
 	const int MAX_GRID = 73;
 	const int MeanEarthRadius = 6371000;
@@ -115,42 +130,53 @@ namespace bamboo {
 	const int LEN_ZTDMAP = 3;
 	const int LEN_EPHION = 4;
 #ifdef _WIN32
-	#define def_thread_t    HANDLE
-	#define def_dev_t       HANDLE 
-	#define def_cond_t      CONDITION_VARIABLE 
-	#define def_lock_t      CRITICAL_SECTION
-	#define def_initlock(f) InitializeCriticalSection(f)
-	#define def_lock(f)     EnterCriticalSection(f)
-	#define def_unlock(f)   LeaveCriticalSection(f)
-	#define def_destroylock(f)  DeleteCriticalSection(f)
+#define def_thread_t    HANDLE
+#define def_dev_t       HANDLE 
+#define def_cond_t      CONDITION_VARIABLE 
+#define def_lock_t      CRITICAL_SECTION
+#define def_initlock(f) InitializeCriticalSection(f)
+#define def_lock(f)     EnterCriticalSection(f)
+#define def_unlock(f)   LeaveCriticalSection(f)
+#define def_destroylock(f)  DeleteCriticalSection(f)
 
-	#define def_initcond(c)  InitializeConditionVariable(c)
-	#define def_notify(c)    WakeConditionVariable(c)
-	#define def_wait(c,f)    SleepConditionVariableCS(c,f,INFINITE)
-	#define def_destroycond(c) 
+#define def_initcond(c)  InitializeConditionVariable(c)
+#define def_notify(c)    WakeConditionVariable(c)
+#define def_wait(c,f)    SleepConditionVariableCS(c,f,INFINITE)
+#define def_destroycond(c) 
 
-	#define FILEPATHSEP '\\'
-	#define def_pthread_id_self()  GetCurrentThreadId()
+#define FILEPATHSEP '\\'
+#define def_pthread_id_self()  GetCurrentThreadId()
 #else
 
-	#define def_thread_t    pthread_t
-	#define def_dev_t       int 
-	#define def_cond_t      pthread_cond_t
-	#define def_lock_t      pthread_mutex_t
-	#define def_initlock(f) pthread_mutex_init(f,NULL)
-	#define def_lock(f)     pthread_mutex_lock(f)
-	#define def_unlock(f)   pthread_mutex_unlock(f)
-	#define def_destroylock(f)  pthread_mutex_destroy(f)
+#define def_thread_t    pthread_t
+#define def_dev_t       int 
+#define def_cond_t      pthread_cond_t
+#define def_lock_t      pthread_mutex_t
+#define def_initlock(f) pthread_mutex_init(f,NULL)
+#define def_lock(f)     pthread_mutex_lock(f)
+#define def_unlock(f)   pthread_mutex_unlock(f)
+#define def_destroylock(f)  pthread_mutex_destroy(f)
 
-	#define def_initcond(c) pthread_cond_init(c,NULL)
-	#define def_notify(c) pthread_cond_signal(c)
-	#define def_wait(c,f) pthread_cond_wait(c,f)
-	#define def_destroycond(c) pthread_cond_destroy(c)
+#define def_initcond(c) pthread_cond_init(c,NULL)
+#define def_notify(c) pthread_cond_signal(c)
+#define def_wait(c,f) pthread_cond_wait(c,f)
+#define def_destroycond(c) pthread_cond_destroy(c)
 
-	#define FILEPATHSEP '/'
+#define FILEPATHSEP '/'
 
-	#define def_pthread_id_self()  pthread_self()
+#define def_pthread_id_self()  pthread_self()
 #endif
+
+
+#define BDSTOINT(type, value) (type)(round(value))
+
+#define BDSADDBITS(a, b) {bitbuffer = (bitbuffer<<(a)) \
+                       |(BDSTOINT(long long,b)&((1ULL<<a)-1)); \
+                       numbits += (a); \
+                       while(numbits >= 8) { \
+                       buffer[size++] = bitbuffer>>(numbits-8);numbits -= 8;}}
+#define BDSADDBITSFLOAT(a,b,c) {long long i = BDSTOINT(long long,(b)/(c)); \
+                             BDSADDBITS(a,i)};
 	template<typename T> string toString(const T& t) {
 		ostringstream oss;  //
 		oss << t;             //

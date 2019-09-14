@@ -142,7 +142,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;_USE_MATH_DEFINES</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -158,6 +158,8 @@
     <ClCompile Include="src\Json\json_reader.cpp" />
     <ClCompile Include="src\Json\json_value.cpp" />
     <ClCompile Include="src\Json\json_writer.cpp" />
+    <ClCompile Include="src\Rnxbrd\BroadcastEphUtils.cpp" />
+    <ClCompile Include="src\Rnxbrd\RnxEphFileAdapter.cpp" />
     <ClCompile Include="src\Rnxobs\Com.cpp" />
     <ClCompile Include="src\Rnxobs\Log.cpp" />
     <ClCompile Include="src\Rnxobs\Patterns.cpp" />
@@ -174,7 +176,6 @@
     <ClCompile Include="src\Rtklib\rtcm3e.cpp" />
     <ClCompile Include="src\Rtklib\rtkcmn.cpp" />
     <ClCompile Include="src\Rtklib\stream.cpp" />
-    <ClCompile Include="src\VrsObs\ntripc.cpp" />
     <ClCompile Include="src\VrsObs\VrsNtripClient.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -189,6 +190,7 @@
     <ClInclude Include="include\Json\value.h" />
     <ClInclude Include="include\Json\version.h" />
     <ClInclude Include="include\Json\writer.h" />
+    <ClInclude Include="include\Rnxbrd\OrbitClk.h" />
     <ClInclude Include="include\Rnxobs\Com.h" />
     <ClInclude Include="include\Rnxobs\Log.h" />
     <ClInclude Include="include\Rnxobs\Patterns.h" />
@@ -200,7 +202,6 @@
     <ClInclude Include="include\RtConverter\RtConvItem.h" />
     <ClInclude Include="include\Rtklib\rtklib.h" />
     <ClInclude Include="include\Rtklib\rtklib_fun.h" />
-    <ClInclude Include="include\VrsObs\ntripc.h" />
     <ClInclude Include="include\VrsObs\VrsNtripClient.h" />
     <ClInclude Include="src\Json\json_tool.h" />
   </ItemGroup>

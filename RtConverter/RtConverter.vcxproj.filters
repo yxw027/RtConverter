@@ -42,9 +42,6 @@
     <ClCompile Include="src\RtConverter\RtConverter.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\Rnxobs\Com.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="src\Rnxobs\RnxobsFile_sat.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -72,10 +69,16 @@
     <ClCompile Include="src\Rnxobs\Log.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\VrsObs\ntripc.cpp">
+    <ClCompile Include="src\VrsObs\VrsNtripClient.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\VrsObs\VrsNtripClient.cpp">
+    <ClCompile Include="src\Rnxbrd\BroadcastEphUtils.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Rnxbrd\RnxEphFileAdapter.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Rnxobs\Com.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -102,9 +105,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\RtConverter\Deploy.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Rnxobs\Com.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\Rnxobs\RtRinexStream.h">
@@ -149,10 +149,13 @@
     <ClInclude Include="include\Rnxobs\Log.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\VrsObs\ntripc.h">
+    <ClInclude Include="include\VrsObs\VrsNtripClient.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\VrsObs\VrsNtripClient.h">
+    <ClInclude Include="include\Rnxbrd\OrbitClk.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Rnxobs\Com.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -25,18 +25,21 @@ namespace bamboo {
 	class Deploy {
 	public:
 		Deploy();
-		static void s_initInstance(int argc,char* args[]) {
+		inline static void s_initInstance(int argc,char* args[]) {
 			if (sInstance == NULL)
 				sInstance = new Deploy(argc,args);
+		}
+		inline static int s_getSpeed() {
+			return sInstance->speed;
 		}
 		~Deploy();
 		static Deploy s_getConfigures();
 		static bool s_updateConfigures ();
-		int mjd0,mjd1;
+		int mjd0,mjd1,speed;
 		double sod0, sod1,seslen,dintv;
-		int nfreq[MAXSYS],nprn,rtkport,nrtkport;
+		int nfreq[MAXSYS],nprn,rtkport,nrtkport,ephport;
 		char freq[MAXSYS][MAXFREQ][LEN_FREQ];
-		char obsdir[256],outdir[256];
+		char obsdir[256],outdir[256],ephdir[1024];
 		string cprn[MAXSAT];
 		time_t lastAct;
 		list<string> post_stalist;

@@ -273,7 +273,6 @@ void RtConverter::makeupEphBuffer_G(GPSEPH& gpsEph, char* buffin, int& nbyte) {
 	else
 		sprintf(buffin + strlen(buffin), "    %19.12e%19.12e\r\n", 0.0, 0.0);
 	nbyte = strlen(buffin);
-	cout << buffin << endl;
 }
 void RtConverter::makeupEphBuffer_R(GLSEPH& glsEph, char* buffin, int& nbyte) {
 	int iy, im, id, ih, imin, isys;
@@ -284,7 +283,6 @@ void RtConverter::makeupEphBuffer_R(GLSEPH& glsEph, char* buffin, int& nbyte) {
 	sprintf(buffin + strlen(buffin), "    %19.12e%19.12e%19.12e%19.12e\r\n", glsEph.pos[1], glsEph.vel[1],glsEph.acc[1], glsEph.frenum);
 	sprintf(buffin + strlen(buffin), "    %19.12e%19.12e%19.12e%19.12e\r\n", glsEph.pos[2], glsEph.vel[2],glsEph.acc[2], glsEph.age);
 	nbyte = strlen(buffin);
-	cout << buffin << endl;
 }
 void RtConverter::routineEph() {
 	time_t now;
@@ -336,8 +334,10 @@ int main(int argc, char* args[]) {
 
 	/// post observation 
 	poststr.openStream(rt_svrs);
+	/// vrs observation 
 	vrsstr.openStream(rt_svrs);
 
+	/// server thread 
 	rtconv_nrtk.beginProcess();
 	rtconv_rtk.beginProcess();
 	rtconv_eph.beginProcess();

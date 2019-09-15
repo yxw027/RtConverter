@@ -6,9 +6,10 @@ Rnxobs = ./src/Rnxobs/
 RtConverter = ./src/RtConverter/
 Rtklib =./src/Rtklib/
 VrsObs =./src/VrsObs/
+Rnxbrd = ./src/Rnxbrd/
 
 ### Patterns 
-C_SRC= $(wildcard *.cpp $(Json)/*.cpp  $(Rnxobs)/*.cpp $(RtConverter)/*.cpp $(Rtklib)/*.cpp $(VrsObs)/*.cpp)
+C_SRC= $(wildcard *.cpp $(Json)/*.cpp  $(Rnxobs)/*.cpp $(RtConverter)/*.cpp $(Rtklib)/*.cpp $(VrsObs)/*.cpp $(Rnxbrd)/*.cpp)
 C_OBJ= $(patsubst %.cpp,%.o,$(C_SRC))
 ### TMP OBJECT
 TMP_OBJ= $(patsubst %.cpp,%.o,$(notdir $(C_SRC)))

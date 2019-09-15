@@ -35,7 +35,7 @@ RnxEphFileAdapter::RnxEphFileAdapter() {
 void RnxEphFileAdapter::v_openRnxEph(string ephcmd) {
 	int curmjd;
 	this->isOpen = 1;
-	Deploy* dly = &Deploy::s_getConfigures();
+	Deploy dly = Deploy::s_getConfigures();
 	int iyear, imon, iday, ih, imin;
 	double dsec, cursod;
 	curmjd = atoi(ephcmd.substr(0, index_string(ephcmd.c_str(), ':')).c_str());
@@ -47,7 +47,7 @@ void RnxEphFileAdapter::v_openRnxEph(string ephcmd) {
 	sod1 = 0.0;
 	mjd2date(curmjd, cursod, &iyear, &imon, &iday, &ih, &imin, &dsec);
 	memset(curFile, 0, sizeof(char) * 1024);
-	strcpy(curFile, dly->ephdir);
+	strcpy(curFile, dly.ephdir);
 	Patterns::s_getInstance()->m_getPatternName(true, "", "", iyear, imon, iday,
 			ih, curFile);
 

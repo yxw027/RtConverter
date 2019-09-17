@@ -151,7 +151,7 @@ RtConvItem VrsNtripClient::m_makeupItems(string staname, rtcm_t* rtcm) {
 			sat.obs[MAXFREQ + ifreq] = rtcm->obs.data[iobs].P[ifreq];
 			sat.fob[MAXFREQ + ifreq] = "C" + string(code);
 
-			sat.snr[ifreq] = rtcm->obs.data[iobs].SNR[ifreq];
+			sat.snr[ifreq] = rtcm->obs.data[iobs].SNR[ifreq] / 4;
 		}
 		if (gotobs) mapObs[cprn] = sat;
 	}

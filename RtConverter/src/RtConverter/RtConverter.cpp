@@ -163,14 +163,23 @@ void RtConverter::makeupTimeBuffer(gtime_t tt, char* buffin, int& nbyte) {
 	return;
 }
 void RtConverter::makeupObsBuffer(const char* sitname, const char* cprn, RtSatObs& obs, char* buffin, int& nbyte) {
-	int ifreq;
+	int ifreq, hasobs = false;
 	string sit_out = string(sitname);
 	transform(sit_out.begin(), sit_out.end(), sit_out.begin(), ::toupper);
 	sprintf(buffin, "%s %s", sit_out.c_str(), cprn);
-	for (ifreq = 0; ifreq < 2 * MAXFREQ; ifreq++) {
+	for (ifreq = 0; ifreq < MAXFREQ; ifreq++) {
+		hasobs = false;
 		if (obs.obs[ifreq] != 0.0) {
+			hasobs = true;
 			sprintf(buffin + strlen(buffin), " %s %14.3lf", obs.fob[ifreq].c_str(), obs.obs[ifreq]);
 		}
+		if (obs.obs[MAXFREQ + ifreq] != 0.0) {
+			hasobs = true;
+			sprintf(buffin + strlen(buffin), " %s %14.3lf", obs.fob[MAXFREQ + ifreq].c_str(), obs.obs[MAXFREQ + ifreq]);
+		}
+		if (hasobs) {
+			sprintf(buffin + strlen(buffin), " %14.3lf", obs.snr[ifreq]);
+		}	
 	}
 	strcat(buffin, "\r\n");
 	nbyte = strlen(buffin);
